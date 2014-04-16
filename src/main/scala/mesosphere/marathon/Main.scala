@@ -9,7 +9,7 @@ import mesosphere.chaos.AppConfiguration
 import mesosphere.marathon.event.{EventModule, EventConfiguration}
 import mesosphere.marathon.event.http.{HttpEventModule, HttpEventConfiguration}
 import com.google.inject.AbstractModule
-import java.util.logging.Logger
+import java.util.logging.{Level, Logger}
 import java.util.Properties
 
 /**
@@ -59,8 +59,14 @@ object Main extends App {
     with HttpConf with MarathonConf with AppConfiguration
       with EventConfiguration with HttpEventConfiguration with ZookeeperConf
 
-  run(
-    classOf[HttpService],
-    classOf[MarathonSchedulerService]
-  )
+  try{
+    run(
+      classOf[HttpService],
+      classOf[MarathonSchedulerService]
+    )
+  }catch{
+    case t: Throwable =>
+      log.log(Level.SEVERE, "Marathon cannot be started.", t)
+      sys.exit(9)
+  }
 }
