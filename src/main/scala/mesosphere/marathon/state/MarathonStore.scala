@@ -50,17 +50,15 @@ class MarathonStore[S <: MarathonState[_, S]](state: State,
   }
 
   def names(): Future[Iterator[String]] = {
-    // TODO use implicit conversion after it has been merged
-    future {
-      try {
-        state.names().get.asScala.collect {
-          case name if name startsWith prefix =>
-            name.replaceFirst(prefix, "")
-        }
-      } catch {
-        // Thrown when node doesn't exist
-        case e: ExecutionException => Seq().iterator
+    state.names().map {
+      case Some(it) => it.asScala.collect {
+        case name if name startsWith prefix =>
+          name.replaceFirst(prefix, "")
       }
+      case None => Seq().iterator
+    } recover {
+      // Thrown when node doesn't exist
+      case e: ExecutionException => Seq().iterator
     }
   }
 
