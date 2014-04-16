@@ -1,16 +1,17 @@
 package mesosphere.marathon
 
+import scala.language.postfixOps
 import org.apache.mesos.Protos.{TaskID, FrameworkInfo}
 import org.apache.mesos.MesosSchedulerDriver
-import java.util.logging.Logger
+import java.util.logging.{Level, Logger}
 import mesosphere.marathon.api.v1.AppDefinition
 import mesosphere.marathon.api.v2.AppUpdate
 import mesosphere.marathon.state.{MarathonStore, AppRepository, Timestamp}
 import com.google.common.util.concurrent.AbstractExecutionThreadService
 import javax.inject.{Named, Inject}
 import java.util.{TimerTask, Timer}
-import scala.concurrent.{Future, ExecutionContext, Await}
-import scala.concurrent.duration.{Duration, MILLISECONDS}
+import scala.concurrent._
+import scala.concurrent.duration._
 import java.util.concurrent.atomic.AtomicBoolean
 import com.twitter.common.base.ExceptionalCommand
 import com.twitter.common.zookeeper.Group.JoinException
@@ -152,7 +153,15 @@ class MarathonSchedulerService @Inject()(
 
   override def triggerShutdown() {
     log.info("Shutting down")
-    abdicateCmd.map(_.execute)
+    abdicateCmd.map{ case cmd =>
+      try{
+        // TODO(everpeace) make it configurable
+        Await.result(future { cmd.execute }, 10 seconds)
+      }catch{
+        case e: Throwable =>
+          log.log(Level.SEVERE, "Problem happened in canceling zookeeper membership.",e)
+      }
+    }
     stopDriver()
     reconciliationTimer.cancel
   }
