@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import com.twitter.common.base.ExceptionalCommand
 import com.twitter.common.zookeeper.Group.JoinException
 import scala.Option
-import com.twitter.common.zookeeper.Candidate
+import com.twitter.common.zookeeper.{ZooKeeperClient, Candidate}
 import com.twitter.common.zookeeper.Candidate.Leader
 import scala.util.Random
 import mesosphere.mesos.util.FrameworkIdUtil
@@ -30,6 +30,7 @@ import mesosphere.util.InterruptibleFuture._
  */
 class MarathonSchedulerService @Inject()(
     @Named(ModuleNames.NAMED_CANDIDATE) candidate: Option[Candidate],
+    zkClient: ZooKeeperClient,
     config: MarathonConf,
     @Named(ModuleNames.NAMED_LEADER_ATOMIC_BOOLEAN) leader: AtomicBoolean,
     appRepository: AppRepository,
@@ -169,6 +170,7 @@ class MarathonSchedulerService @Inject()(
     }
     stopDriver()
     reconciliationTimer.cancel
+    zkClient.close()
   }
 
   def runDriver() {
