@@ -21,6 +21,7 @@ import com.twitter.common.zookeeper.Candidate.Leader
 import scala.util.Random
 import mesosphere.mesos.util.FrameworkIdUtil
 import mesosphere.marathon.Protos.MarathonTask
+import mesosphere.util.InterruptibleFuture._
 
 /**
  * Wrapper class for the scheduler
@@ -154,12 +155,16 @@ class MarathonSchedulerService @Inject()(
   override def triggerShutdown() {
     log.info("Shutting down")
     abdicateCmd.map{ case cmd =>
-      try{
+      // Await.result never interrupt its internal thread even if timeout occurred.
+      // If the thread weren't interrupted, abdicateCmd will try to connect to ZK forever.
+      val (execute, interrupt) = interruptibleFuture{ cmd.execute }
+      try {
         // TODO(everpeace) make it configurable
-        Await.result(future { cmd.execute }, 10 seconds)
-      }catch{
+        Await.result(execute , 10 seconds)
+      } catch {
         case e: Throwable =>
-          log.log(Level.SEVERE, "Problem happened in canceling zookeeper membership.",e)
+          log.log(Level.SEVERE, "Problem happened in canceling zookeeper membership.", e)
+          interrupt()
       }
     }
     stopDriver()
