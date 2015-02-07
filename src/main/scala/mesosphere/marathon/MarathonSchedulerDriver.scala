@@ -1,5 +1,6 @@
 package mesosphere.marathon
 
+import com.amazonaws.ecs.sample.ECSSchedulerDriver
 import org.apache.mesos.Protos.{ FrameworkID, FrameworkInfo, Credential }
 import org.apache.mesos.{ SchedulerDriver, MesosSchedulerDriver }
 
@@ -54,13 +55,7 @@ object MarathonSchedulerDriver {
 
     val frameworkInfo = frameworkInfoBuilder.build()
 
-    val newDriver: MesosSchedulerDriver = credential match {
-      case Some(cred) =>
-        new MesosSchedulerDriver(newScheduler, frameworkInfo, config.mesosMaster(), cred)
-
-      case None =>
-        new MesosSchedulerDriver(newScheduler, frameworkInfo, config.mesosMaster())
-    }
+    val newDriver: SchedulerDriver = new ECSSchedulerDriver(newScheduler, frameworkInfo, config.mesosMaster())
 
     driver = Some(newDriver)
     scheduler = Some(newScheduler)
