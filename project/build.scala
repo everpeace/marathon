@@ -60,7 +60,8 @@ object MarathonBuild extends Build {
       "Mesosphere Public Repo"    at "http://downloads.mesosphere.io/maven",
       "Twitter Maven2 Repository" at "http://maven.twttr.com/",
       "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
-      "Spray Maven Repository"    at "http://repo.spray.io/"
+      "Spray Maven Repository"    at "http://repo.spray.io/",
+      "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
     ),
     sourceGenerators in Compile <+= buildInfo,
     fork in Test := true,
@@ -148,6 +149,7 @@ object Dependencies {
     beanUtils % "compile",
     scallop % "compile",
     playJson % "compile",
+    ecsMesosScheduler % "compile",
 
     // test
     Test.scalatest % "test",
@@ -174,6 +176,8 @@ object Dependency {
     val Hadoop = "2.4.1"
     val Scallop = "0.9.5"
     val PlayJson = "2.3.4"
+
+    val ecsMesosScheduler = "0.1"
 
     // test deps versions
     val Mockito = "1.9.5"
@@ -203,6 +207,8 @@ object Dependency {
   val hadoopCommon = "org.apache.hadoop" % "hadoop-common" % V.Hadoop excludeAll(excludeMortbayJetty, excludeJavaxServlet)
   val beanUtils = "commons-beanutils" % "commons-beanutils" % "1.9.2"
   val scallop = "org.rogach" %% "scallop" % V.Scallop
+
+  val ecsMesosScheduler = "com.amazonaws" % "amazon-ecs-scheduler-driver" % V.ecsMesosScheduler
 
   object Test {
     val scalatest = "org.scalatest" %% "scalatest" % V.ScalaTest
